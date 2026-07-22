@@ -2,6 +2,14 @@
 
 use Illuminate\Support\Str;
 
+// Deteksi apakah sedang di lingkungan lokal (Offline) atau Production (Online)
+$host = env('DB_HOST', '127.0.0.1');
+$isLocal = in_array($host, ['127.0.0.1', 'localhost', '::1']);
+
+// Opsi SSL: Aktif hanya jika Online / bukan di Localhost
+$sslCaPath = base_path(env('MYSQL_ATTR_SSL_CA', 'cacert.pem'));
+$useSsl = !$isLocal && is_file($sslCaPath);
+
 return [
 
     /*
@@ -37,8 +45,8 @@ return [
             'url' => env('DATABASE_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
+            'database' => env('DB_DATABASE', 'kkm_db'),
+            'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
@@ -48,9 +56,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => is_file(base_path(env('MYSQL_ATTR_SSL_CA', 'cacert.pem')))
-                    ? base_path(env('MYSQL_ATTR_SSL_CA', 'cacert.pem'))
-                    : (is_file('/etc/ssl/certs/ca-certificates.crt') ? '/etc/ssl/certs/ca-certificates.crt' : null),
+                PDO::MYSQL_ATTR_SSL_CA => $useSsl ? $sslCaPath : null,
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
             ]) : [],
         ],

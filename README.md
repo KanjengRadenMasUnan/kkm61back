@@ -24,6 +24,7 @@ backend-kkm
 │  │  ├─ packages.php
 │  │  └─ services.php
 │  └─ providers.php
+├─ cacert.pem
 ├─ composer.json
 ├─ composer.lock
 ├─ config
@@ -52,9 +53,11 @@ backend-kkm
 │  │  ├─ 2026_07_20_103910_create_program_kerjas_table.php
 │  │  ├─ 2026_07_20_103911_create_beritas_table.php
 │  │  ├─ 2026_07_20_103912_create_kegiatans_table.php
-│  │  └─ 2026_07_20_133921_create_admins_table.php
+│  │  ├─ 2026_07_20_133921_create_admins_table.php
+│  │  └─ 2026_07_21_173347_change_foto_column_type_in_anggota_table.php
 │  └─ seeders
 │     └─ DatabaseSeeder.php
+├─ Dockerfile
 ├─ package.json
 ├─ phpunit.xml
 ├─ public
