@@ -9,10 +9,18 @@ use App\Models\Kegiatan;
 use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use Cloudinary\Cloudinary;
 
 class ApiController extends Controller
 {
+    private $cloudinary;
+
+    public function __construct()
+    {
+        // Inisialisasi Cloudinary dari variabel CLOUDINARY_URL di file .env
+        $this->cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+    }
+
     // ==========================================
     // --- FITUR AUTENTIKASI ---
     // ==========================================
@@ -57,23 +65,26 @@ class ApiController extends Controller
     {
         try {
             $request->validate([
-                'nama' => 'required',
-                'nim' => 'required',
+                'nama'  => 'required',
+                'nim'   => 'required',
                 'peran' => 'required',
-                'foto' => 'nullable'
+                'foto'  => 'nullable'
             ]);
 
             $fotoPath = $request->foto;
             if ($request->hasFile('foto')) {
-                $path = $request->file('foto')->store('uploads/anggota', 'public');
-                $fotoPath = asset('storage/' . $path);
+                $uploadApi = $this->cloudinary->uploadApi();
+                $result = $uploadApi->upload($request->file('foto')->getRealPath(), [
+                    'folder' => 'kkm/anggota'
+                ]);
+                $fotoPath = $result['secure_url'];
             }
 
             $anggota = Anggota::create([
-                'nama' => $request->nama,
-                'nim' => $request->nim,
-                'peran' => $request->peran,
-                'foto' => $fotoPath,
+                'nama'   => $request->nama,
+                'nim'    => $request->nim,
+                'peran'  => $request->peran,
+                'foto'   => $fotoPath,
                 'urutan' => $request->urutan ?? 99,
             ]);
 
@@ -93,22 +104,25 @@ class ApiController extends Controller
             }
 
             $request->validate([
-                'nama' => 'required',
-                'nim' => 'required',
+                'nama'  => 'required',
+                'nim'   => 'required',
                 'peran' => 'required'
             ]);
 
             $fotoPath = $request->foto ?? $anggota->foto;
             if ($request->hasFile('foto')) {
-                $path = $request->file('foto')->store('uploads/anggota', 'public');
-                $fotoPath = asset('storage/' . $path);
+                $uploadApi = $this->cloudinary->uploadApi();
+                $result = $uploadApi->upload($request->file('foto')->getRealPath(), [
+                    'folder' => 'kkm/anggota'
+                ]);
+                $fotoPath = $result['secure_url'];
             }
 
             $anggota->update([
-                'nama' => $request->nama,
-                'nim' => $request->nim,
-                'peran' => $request->peran,
-                'foto' => $fotoPath,
+                'nama'   => $request->nama,
+                'nim'    => $request->nim,
+                'peran'  => $request->peran,
+                'foto'   => $fotoPath,
                 'urutan' => $request->urutan ?? $anggota->urutan,
             ]);
 
@@ -167,36 +181,37 @@ class ApiController extends Controller
     {
         try {
             $request->validate([
-                'judul' => 'required|string',
-                'tanggal' => 'required|date',
+                'judul'     => 'required|string',
+                'tanggal'   => 'required|date',
                 'ringkasan' => 'required|string',
             ]);
 
             $gambarPath = null;
             if ($request->hasFile('gambar')) {
-                $file = $request->file('gambar');
-                $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-                $path = $file->storeAs('uploads/berita', $filename, 'public');
-                $gambarPath = asset('storage/' . $path);
+                $uploadApi = $this->cloudinary->uploadApi();
+                $result = $uploadApi->upload($request->file('gambar')->getRealPath(), [
+                    'folder' => 'kkm/berita'
+                ]);
+                $gambarPath = $result['secure_url'];
             } elseif ($request->filled('gambar') && !str_starts_with($request->gambar, 'blob:')) {
                 $gambarPath = $request->gambar;
             }
 
             $berita = Berita::create([
-                'judul' => $request->judul,
-                'tanggal' => $request->tanggal,
+                'judul'     => $request->judul,
+                'tanggal'   => $request->tanggal,
                 'ringkasan' => $request->ringkasan,
-                'isi' => $request->isi ?? $request->ringkasan,
-                'gambar' => $gambarPath,
-                'kategori' => $request->kategori ?? 'Pendidikan',
-                'penulis' => $request->penulis ?? 'Humas KKM 61',
-                'blocks' => [],
+                'isi'       => $request->isi ?? $request->ringkasan,
+                'gambar'    => $gambarPath,
+                'kategori'  => $request->kategori ?? 'Pendidikan',
+                'penulis'   => $request->penulis ?? 'Humas KKM 61',
+                'blocks'    => [],
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Berita berhasil disimpan!',
-                'data' => $berita
+                'data'    => $berita
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -216,35 +231,36 @@ class ApiController extends Controller
             }
 
             $request->validate([
-                'judul' => 'required|string',
-                'tanggal' => 'required|date',
+                'judul'     => 'required|string',
+                'tanggal'   => 'required|date',
                 'ringkasan' => 'required|string',
             ]);
 
             $gambarPath = $berita->gambar;
             if ($request->hasFile('gambar')) {
-                $file = $request->file('gambar');
-                $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-                $path = $file->storeAs('uploads/berita', $filename, 'public');
-                $gambarPath = asset('storage/' . $path);
+                $uploadApi = $this->cloudinary->uploadApi();
+                $result = $uploadApi->upload($request->file('gambar')->getRealPath(), [
+                    'folder' => 'kkm/berita'
+                ]);
+                $gambarPath = $result['secure_url'];
             } elseif ($request->filled('gambar') && !str_starts_with($request->gambar, 'blob:')) {
                 $gambarPath = $request->gambar;
             }
 
             $berita->update([
-                'judul' => $request->judul,
-                'tanggal' => $request->tanggal,
+                'judul'     => $request->judul,
+                'tanggal'   => $request->tanggal,
                 'ringkasan' => $request->ringkasan,
-                'isi' => $request->isi ?? $berita->isi,
-                'gambar' => $gambarPath,
-                'kategori' => $request->kategori ?? $berita->kategori,
-                'penulis' => $request->penulis ?? $berita->penulis,
+                'isi'       => $request->isi ?? $berita->isi,
+                'gambar'    => $gambarPath,
+                'kategori'  => $request->kategori ?? $berita->kategori,
+                'penulis'   => $request->penulis ?? $berita->penulis,
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Berita berhasil diperbarui!',
-                'data' => $berita
+                'data'    => $berita
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -287,10 +303,10 @@ class ApiController extends Controller
     {
         try {
             $data = $request->validate([
-                'bidang' => 'required',
-                'program' => 'required',
-                'status' => 'required',
-                'progress' => 'required|numeric|min:0|max:100',
+                'bidang'        => 'required',
+                'program'       => 'required',
+                'status'        => 'required',
+                'progress'      => 'required|numeric|min:0|max:100',
                 'laporan_hasil' => 'nullable'
             ]);
 
@@ -311,10 +327,10 @@ class ApiController extends Controller
             }
 
             $data = $request->validate([
-                'bidang' => 'required',
-                'program' => 'required',
-                'status' => 'required',
-                'progress' => 'required|numeric|min:0|max:100',
+                'bidang'        => 'required',
+                'program'       => 'required',
+                'status'        => 'required',
+                'progress'      => 'required|numeric|min:0|max:100',
                 'laporan_hasil' => 'nullable'
             ]);
 
