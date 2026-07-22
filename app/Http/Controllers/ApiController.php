@@ -13,12 +13,33 @@ use Cloudinary\Cloudinary;
 
 class ApiController extends Controller
 {
-    private $cloudinary;
+    private $cloudinary = null;
 
     public function __construct()
     {
-        // Inisialisasi Cloudinary dari variabel CLOUDINARY_URL di file .env
-        $this->cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+        // Hanya inisialisasi Cloudinary jika CLOUDINARY_URL tersedia di .env
+        if (env('CLOUDINARY_URL')) {
+            $this->cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+        }
+    }
+
+    /**
+     * Helper untuk handle upload gambar (Mendukung Cloudinary & Storage Lokal)
+     */
+    private function uploadGambar($file, $folderPath)
+    {
+        if ($this->cloudinary) {
+            // Upload ke Cloudinary (Render / Production)
+            $uploadApi = $this->cloudinary->uploadApi();
+            $result = $uploadApi->upload($file->getRealPath(), [
+                'folder' => $folderPath
+            ]);
+            return $result['secure_url'];
+        } else {
+            // Fallback ke Storage Lokal jika di komputer Lokal tanpa Cloudinary
+            $path = $file->store($folderPath, 'public');
+            return asset('storage/' . $path);
+        }
     }
 
     // ==========================================
@@ -73,11 +94,7 @@ class ApiController extends Controller
 
             $fotoPath = $request->foto;
             if ($request->hasFile('foto')) {
-                $uploadApi = $this->cloudinary->uploadApi();
-                $result = $uploadApi->upload($request->file('foto')->getRealPath(), [
-                    'folder' => 'kkm/anggota'
-                ]);
-                $fotoPath = $result['secure_url'];
+                $fotoPath = $this->uploadGambar($request->file('foto'), 'kkm/anggota');
             }
 
             $anggota = Anggota::create([
@@ -111,11 +128,7 @@ class ApiController extends Controller
 
             $fotoPath = $request->foto ?? $anggota->foto;
             if ($request->hasFile('foto')) {
-                $uploadApi = $this->cloudinary->uploadApi();
-                $result = $uploadApi->upload($request->file('foto')->getRealPath(), [
-                    'folder' => 'kkm/anggota'
-                ]);
-                $fotoPath = $result['secure_url'];
+                $fotoPath = $this->uploadGambar($request->file('foto'), 'kkm/anggota');
             }
 
             $anggota->update([
@@ -188,11 +201,7 @@ class ApiController extends Controller
 
             $gambarPath = null;
             if ($request->hasFile('gambar')) {
-                $uploadApi = $this->cloudinary->uploadApi();
-                $result = $uploadApi->upload($request->file('gambar')->getRealPath(), [
-                    'folder' => 'kkm/berita'
-                ]);
-                $gambarPath = $result['secure_url'];
+                $gambarPath = $this->uploadGambar($request->file('gambar'), 'kkm/berita');
             } elseif ($request->filled('gambar') && !str_starts_with($request->gambar, 'blob:')) {
                 $gambarPath = $request->gambar;
             }
@@ -238,11 +247,7 @@ class ApiController extends Controller
 
             $gambarPath = $berita->gambar;
             if ($request->hasFile('gambar')) {
-                $uploadApi = $this->cloudinary->uploadApi();
-                $result = $uploadApi->upload($request->file('gambar')->getRealPath(), [
-                    'folder' => 'kkm/berita'
-                ]);
-                $gambarPath = $result['secure_url'];
+                $gambarPath = $this->uploadGambar($request->file('gambar'), 'kkm/berita');
             } elseif ($request->filled('gambar') && !str_starts_with($request->gambar, 'blob:')) {
                 $gambarPath = $request->gambar;
             }
