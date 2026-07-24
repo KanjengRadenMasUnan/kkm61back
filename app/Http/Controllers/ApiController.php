@@ -9,6 +9,7 @@ use App\Models\Kegiatan;
 use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str; // TAMBAHAN: Helper Str untuk generate slug
 use Cloudinary\Cloudinary;
 
 class ApiController extends Controller
@@ -177,6 +178,22 @@ class ApiController extends Controller
         }
     }
 
+    // TAMBAHAN: Fungsi mengambil detail berita berdasarkan SLUG (untuk SEO Frontend)
+    public function getBeritaBySlug($slug)
+    {
+        try {
+            $berita = Berita::where('slug', $slug)->first();
+
+            if (!$berita) {
+                return response()->json(['message' => 'Berita tidak ditemukan'], 404);
+            }
+
+            return response()->json($berita, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal mengambil detail berita: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function storeBerita(Request $request)
     {
         try {
@@ -197,15 +214,17 @@ class ApiController extends Controller
                 $gambarPath = $request->gambar;
             }
 
+            // DIBERBAIKI: Menambahkan field 'slug' otomatis dari judul
             $berita = Berita::create([
                 'judul'     => $request->judul,
+                'slug'      => Str::slug($request->judul), // Generate Slug Otomatis
                 'tanggal'   => $request->tanggal,
                 'ringkasan' => $request->ringkasan,
                 'isi'       => $request->isi ?? $request->ringkasan,
                 'gambar'    => $gambarPath,
                 'kategori'  => $request->kategori ?? 'Pendidikan',
                 'penulis'   => $request->penulis ?? 'Humas KKM 61',
-                'blocks'    => [],
+                'blocks'    => $request->blocks ?? [],
             ]);
 
             return response()->json([
@@ -247,8 +266,10 @@ class ApiController extends Controller
                 $gambarPath = $request->gambar;
             }
 
+            // DIBERBAIKI: Update slug jika judul diubah
             $berita->update([
                 'judul'     => $request->judul,
+                'slug'      => Str::slug($request->judul),
                 'tanggal'   => $request->tanggal,
                 'ringkasan' => $request->ringkasan,
                 'isi'       => $request->isi ?? $berita->isi,

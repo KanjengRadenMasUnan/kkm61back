@@ -9,6 +9,7 @@ use App\Models\Berita;
 use App\Models\Kegiatan;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str; // Import Helper Str untuk Slug
 
 class DatabaseSeeder extends Seeder
 {
@@ -40,12 +41,18 @@ class DatabaseSeeder extends Seeder
             ['judul' => 'Bimbingan Belajar', 'deskripsi' => 'Membantu anak-anak belajar membaca dan berhitung.', 'tanggal' => '2026-07-15', 'ikon' => 'BookOpen'],
         ]);
 
-        Berita::insert([
+        // Tambahkan slug secara otomatis pada tiap item berita
+        $dataBerita = [
             ['judul' => 'Survey Awal dan Pemetaan Potensi Desa', 'tanggal' => '2026-07-10', 'ringkasan' => 'Tim melakukan survey menyeluruh untuk mengidentifikasi potensi pertanian, UMKM, dan kebutuhan pendidikan masyarakat.', 'gambar' => null],
             ['judul' => 'Pelatihan Hidroponik untuk Kelompok Tani', 'tanggal' => '2026-07-15', 'ringkasan' => 'Sebanyak 25 petani mengikuti pelatihan hidroponik sistem wick sebagai solusi lahan sempit.', 'gambar' => null],
             ['judul' => 'Bimbingan Belajar untuk Anak Sekolah', 'tanggal' => '2026-07-18', 'ringkasan' => 'Kegiatan bimbel di balai desa diikuti 40 anak SD. Fokus pada literasi dan numerasi dasar.', 'gambar' => null],
             ['judul' => 'Kerja Bakti Penghijauan', 'tanggal' => '2026-07-20', 'ringkasan' => 'Bersama warga, kami menanam 150 bibit pohon dan membuat 30 lubang biopori.', 'gambar' => null],
-        ]);
+        ];
+
+        foreach ($dataBerita as $item) {
+            $item['slug'] = Str::slug($item['judul']); // Membuat slug otomatis dari judul
+            Berita::create($item);
+        }
 
         ProgramKerja::insert([
             [

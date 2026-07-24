@@ -12,6 +12,7 @@ return new class extends Migration
         Schema::create('beritas', function (Blueprint $table) {
             $table->id();
             $table->string('judul');
+            $table->string('slug')->unique(); // Tambahan kolom slug untuk SEO
             $table->date('tanggal');
             $table->text('ringkasan');
             $table->longText('isi')->nullable();

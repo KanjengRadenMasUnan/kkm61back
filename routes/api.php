@@ -24,6 +24,7 @@ Route::get('/berita/{id}', [ApiController::class, 'getBeritaDetail']); // Route 
 Route::post('/berita', [ApiController::class, 'storeBerita']);
 Route::put('/berita/{id}', [ApiController::class, 'updateBerita']);
 Route::delete('/berita/{id}', [ApiController::class, 'deleteBerita']);
+Route::get('/berita/slug/{slug}', [ApiController::class, 'getBeritaBySlug']);
 
 // Fitur Program Kerja
 Route::get('/program-kerja', [ApiController::class, 'getProgramKerja']);
